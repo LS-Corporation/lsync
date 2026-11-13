@@ -10,14 +10,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/snowiw/lsync/releases/latest/download/Lsync-Setup.exe"><b>Baixar o Lsync para Windows</b></a>
+  <a href="https://github.com/LS-Corporation/lsync/releases/latest/download/Lsync-Setup.exe"><b>Baixar o Lsync para Windows</b></a>
 </p>
 
 ---
 
 ## Instalação
 
-1. Clique em **[Baixar o Lsync para Windows](https://github.com/snowiw/lsync/releases/latest/download/Lsync-Setup.exe)**. O arquivo `Lsync-Setup.exe` vai para a sua pasta de Downloads.
+1. Clique em **[Baixar o Lsync para Windows](https://github.com/LS-Corporation/lsync/releases/latest/download/Lsync-Setup.exe)**. O arquivo `Lsync-Setup.exe` vai para a sua pasta de Downloads.
 2. Abra o arquivo e clique em **Avançar** até terminar.
 3. Pronto. O Lsync aparece na área de trabalho e no menu Iniciar.
 
@@ -25,7 +25,7 @@ Na primeira vez, o Windows pode mostrar o aviso "O Windows protegeu o computador
 
 Para desinstalar, vá em **Configurações > Aplicativos**, procure "Lsync" e clique em Desinstalar.
 
-Prefere não instalar nada? Baixe o [Lsync-Portatil.zip](https://github.com/snowiw/lsync/releases/latest/download/Lsync-Portatil.zip), extraia a pasta e abra o `Lsync.exe` que está dentro dela.
+Prefere não instalar nada? Baixe o [Lsync-Portatil.zip](https://github.com/LS-Corporation/lsync/releases/latest/download/Lsync-Portatil.zip), extraia a pasta e abra o `Lsync.exe` que está dentro dela.
 
 ## Ferramentas
 
@@ -72,7 +72,7 @@ Em **Configurações**, no canto inferior esquerdo, dá para trocar o idioma, o 
 Precisa do [Python](https://www.python.org/downloads/) 3.10 a 3.13.
 
 ```bash
-git clone https://github.com/snowiw/lsync.git
+git clone https://github.com/LS-Corporation/lsync.git
 cd lsync
 python -m venv .venv
 .venv\Scripts\activate
