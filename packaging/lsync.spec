@@ -7,7 +7,7 @@ datas = [(str(root / "assets"), "assets")]
 binaries = []
 hiddenimports = []
 
-for pkg in ("imageio_ffmpeg", "yt_dlp", "yt_dlp_ejs", "deno", "pillow_heif", "pypdfium2", "pypdfium2_raw", "comtypes"):
+for pkg in ("imageio_ffmpeg", "yt_dlp", "yt_dlp_ejs", "deno", "pillow_heif", "pypdfium2", "pypdfium2_raw", "comtypes", "curl_cffi"):
     try:
         d, b, h = collect_all(pkg)
         datas += d

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import threading
 from typing import Callable
 
 from PySide6.QtCore import Qt, QTimer
@@ -11,7 +12,8 @@ from PySide6.QtWidgets import (
 )
 
 from lsync import APP_NAME
-from lsync.core.utils import default_output_dir, load_settings, save_settings
+from lsync.core import updater
+from lsync.core.utils import default_output_dir, hide_console_windows, load_settings, save_settings
 from lsync.i18n import _, get_language, set_language, system_language
 from lsync.ui import theme
 from lsync.ui.pages import PAGES, SettingsPage
@@ -68,6 +70,19 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1020, 700)
         self.overlay: LoadingOverlay | None = None
         self._build()
+        QTimer.singleShot(5000, self._auto_update)
+
+    def _auto_update(self) -> None:
+        if not updater.auto_enabled(self.settings) or not updater.due():
+            return
+
+        def work() -> None:
+            try:
+                updater.update()
+            except Exception:
+                pass
+
+        threading.Thread(target=work, daemon=True).start()
 
     def _build(self, files: dict | None = None) -> None:
         theme.apply(self.theme_mode)
@@ -199,6 +214,8 @@ class MainWindow(QMainWindow):
 
 
 def main() -> None:
+    hide_console_windows()
+    updater.activate()
     if sys.platform == "win32":
         try:
             import ctypes

@@ -1,3 +1,3 @@
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 APP_NAME = "Lsync"
 REPO_URL = "https://github.com/LS-Corporation/lsync"

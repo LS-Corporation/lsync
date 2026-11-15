@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from lsync import APP_NAME, REPO_URL, __version__
-from lsync.core import documents, effects, images, media
+from lsync.core import documents, effects, images, media, updater
 from lsync.core.formats import kind_of
 from lsync.core.utils import Cancelled, TaskContext, open_in_explorer
 from lsync.i18n import LANGUAGES, _, get_language
@@ -1032,6 +1032,10 @@ class ResizePage(ToolPage):
 THEMES = {"System": "Sistema", "Light": "Claro", "Dark": "Escuro"}
 
 
+class _UpdateEmitter(QObject):
+    event = Signal(str, object)
+
+
 class SettingsPage(QWidget):
     key = "settings"
     icon = "gear"
@@ -1078,6 +1082,32 @@ class SettingsPage(QWidget):
         folders.box.addWidget(self.output)
         lay.addWidget(folders)
 
+        self.upd = _UpdateEmitter()
+        self.upd.event.connect(self._on_update_event)
+        dl = Card(_("Baixador de vídeos"), "download")
+        dl.box.addWidget(label(_("Quando o YouTube, o TikTok ou outro site muda, o Lsync atualiza o baixador sozinho. Se um download der erro, ele atualiza e tenta de novo."), "Muted", wrap=True))
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        self.dl_version = label(_("Versão do baixador: {v}").format(v="…"))
+        row.addWidget(self.dl_version)
+        row.addStretch(1)
+        self.dl_spinner = Spinner(18, 2.5)
+        self.dl_spinner.hide()
+        row.addWidget(self.dl_spinner)
+        self.dl_button = button(_("Atualizar agora"), "download", "", self._update_downloader)
+        row.addWidget(self.dl_button)
+        dl.box.addLayout(row)
+        self.dl_status = label("", "Small", wrap=True)
+        self.dl_status.hide()
+        dl.box.addWidget(self.dl_status)
+        auto = QCheckBox(_("Atualizar automaticamente (recomendado)"))
+        auto.setCursor(Qt.PointingHandCursor)
+        auto.setChecked(updater.auto_enabled(win.settings))
+        auto.toggled.connect(self._auto_toggled)
+        dl.box.addWidget(auto)
+        lay.addWidget(dl)
+        threading.Thread(target=lambda: self.upd.event.emit("version", updater.current_version()), daemon=True).start()
+
         look = Card(_("Aparência"), "sun")
         lf = make_form()
         look.box.addLayout(lf)
@@ -1109,6 +1139,48 @@ class SettingsPage(QWidget):
     @property
     def busy(self) -> bool:
         return False
+
+    def _auto_toggled(self, on: bool) -> None:
+        self.win.settings["auto_update_downloader"] = bool(on)
+        self.win.save_settings()
+
+    def _update_downloader(self) -> None:
+        download = self.win.pages.get("download")
+        if download is not None and download.busy:
+            QMessageBox.information(self, APP_NAME, _("Espere o download terminar para atualizar o baixador."))
+            return
+        self.dl_button.setEnabled(False)
+        self.dl_spinner.start()
+        self._status(_("Procurando atualização…"))
+
+        def work() -> None:
+            try:
+                self.upd.event.emit("done", updater.update())
+            except Exception as exc:
+                self.upd.event.emit("error", str(exc))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _status(self, text: str, color: str = "") -> None:
+        self.dl_status.setStyleSheet(f"color: {color};" if color else "")
+        self.dl_status.setText(text)
+        self.dl_status.setVisible(bool(text))
+
+    def _on_update_event(self, kind: str, data: Any) -> None:
+        if kind == "version":
+            self.dl_version.setText(_("Versão do baixador: {v}").format(v=data))
+            return
+        self.dl_spinner.stop()
+        self.dl_button.setEnabled(True)
+        if kind == "error":
+            self._status(_("Não consegui atualizar agora. Verifique sua internet e tente de novo.") + " " + str(data), C["danger"])
+            return
+        old, new, changed = data
+        self.dl_version.setText(_("Versão do baixador: {v}").format(v=new))
+        if changed:
+            self._status(_("Atualizado de {a} para {b}.").format(a=old, b=new), C["success"])
+        else:
+            self._status(_("Você já tem a versão mais nova."), C["success"])
 
 
 PREVIEW_W, PREVIEW_H = 380, 300

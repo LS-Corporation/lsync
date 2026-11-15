@@ -1,6 +1,6 @@
 #define AppVersion GetEnv("LSYNC_VERSION")
 #if AppVersion == ""
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
 #endif
 
 [Setup]

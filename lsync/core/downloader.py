@@ -31,6 +31,40 @@ def _format_selector(mode: str, height: int) -> str:
     return f"bv*{h}[vcodec^=avc1]+ba[ext=m4a]/bv*{h}[ext=mp4]+ba[ext=m4a]/bv*{h}+ba/b{h}/bv*+ba/b"
 
 
+class _SiteChanged(Exception):
+    def __init__(self, friendly: str):
+        super().__init__(friendly)
+        self.friendly = friendly
+
+
+def _raise_for(msg: str, exc: Exception) -> None:
+    from lsync.core import updater
+
+    if updater.looks_outdated(msg):
+        raise _SiteChanged(_friendly_error(msg)) from exc
+    raise RuntimeError(_friendly_error(msg)) from exc
+
+
+def _with_update(fn, ctx: Optional[TaskContext], *args, **kwargs):
+    from lsync.core import updater
+
+    try:
+        return fn(*args, **kwargs)
+    except _SiteChanged as first:
+        if ctx is not None:
+            ctx.status(_("O site mudou. Atualizando o baixador e tentando de novo…"))
+        try:
+            changed = updater.update()[2]
+        except Exception:
+            changed = False
+        if not changed:
+            raise RuntimeError(first.friendly) from first
+        try:
+            return fn(*args, **kwargs)
+        except _SiteChanged as again:
+            raise RuntimeError(again.friendly) from again
+
+
 def download(
     url: str,
     out_dir: str | Path,
@@ -38,6 +72,17 @@ def download(
     height: int = 0,
     ctx: Optional[TaskContext] = None,
     playlist: bool = False,
+) -> list[Path]:
+    return _with_update(_download_once, ctx, url, out_dir, mode, height, ctx, playlist)
+
+
+def _download_once(
+    url: str,
+    out_dir: str | Path,
+    mode: str,
+    height: int,
+    ctx: Optional[TaskContext],
+    playlist: bool,
 ) -> list[Path]:
     import yt_dlp
 
@@ -106,7 +151,7 @@ def download(
         msg = str(exc).replace("ERROR: ", "")
         if (ctx is not None and ctx.cancelled) or "Cancelled" in msg:
             raise Cancelled() from exc
-        raise RuntimeError(_friendly_error(msg)) from exc
+        _raise_for(msg, exc)
 
     unique = list(dict.fromkeys(p for p in finished if p.exists()))
     if ctx is not None:
@@ -126,6 +171,10 @@ def _friendly_error(msg: str) -> str:
 
 
 def fetch_info(url: str) -> dict:
+    return _with_update(_fetch_once, None, url)
+
+
+def _fetch_once(url: str) -> dict:
     import urllib.request
 
     import yt_dlp
@@ -139,7 +188,7 @@ def fetch_info(url: str) -> dict:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=False)
     except yt_dlp.utils.DownloadError as exc:
-        raise RuntimeError(_friendly_error(str(exc).replace("ERROR: ", ""))) from exc
+        _raise_for(str(exc).replace("ERROR: ", ""), exc)
     info = info or {}
     thumb_url = info.get("thumbnail")
     if not thumb_url and info.get("thumbnails"):

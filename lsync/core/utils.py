@@ -98,6 +98,23 @@ def open_in_explorer(path: str | Path) -> None:
         subprocess.Popen(["xdg-open", path])
 
 
+def hide_console_windows() -> None:
+    if os.name != "nt" or getattr(subprocess.Popen, "_lsync_hidden", False):
+        return
+    original = subprocess.Popen.__init__
+    no_window = subprocess.CREATE_NO_WINDOW
+    new_console = subprocess.CREATE_NEW_CONSOLE
+
+    def init(self, *args, **kwargs):
+        flags = kwargs.get("creationflags") or 0
+        if not flags & new_console:
+            kwargs["creationflags"] = flags | no_window
+        original(self, *args, **kwargs)
+
+    subprocess.Popen.__init__ = init
+    subprocess.Popen._lsync_hidden = True
+
+
 def hidden_window_kwargs() -> dict:
     if os.name == "nt":
         return {"creationflags": subprocess.CREATE_NO_WINDOW}

@@ -23,6 +23,9 @@ def ffmpeg_path() -> str:
     try:
         import imageio_ffmpeg
 
+        bundled = sorted((Path(imageio_ffmpeg.__file__).parent / "binaries").glob("ffmpeg*"))
+        if bundled:
+            return str(bundled[0])
         exe = imageio_ffmpeg.get_ffmpeg_exe()
         if exe and Path(exe).is_file():
             return exe
