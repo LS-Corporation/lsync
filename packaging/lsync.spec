@@ -30,6 +30,22 @@ a = Analysis(
     ],
     noarchive=False,
 )
+DROP = (
+    "opengl32sw.dll", "opencv_videoio_ffmpeg", "pyside6/translations/",
+    "plugins/tls/", "plugins/networkinformation/", "plugins/generic/", "plugins/platforminputcontexts/",
+    "plugins/imageformats/qpdf", "plugins/imageformats/qtga", "plugins/imageformats/qtiff", "plugins/imageformats/qwbmp",
+    "plugins/imageformats/qwebp", "plugins/imageformats/qgif", "plugins/imageformats/qicns",
+    "qt6pdf.dll", "qt6network.dll", "qt6qml", "qt6quick", "qt6opengl", "qt6virtualkeyboard",
+)
+
+
+def keep(entry):
+    name = entry[0].replace("\\", "/").lower()
+    return not any(d in name for d in DROP)
+
+
+a.binaries = [b for b in a.binaries if keep(b)]
+a.datas = [d for d in a.datas if keep(d)]
 pyz = PYZ(a.pure)
 
 exe = EXE(

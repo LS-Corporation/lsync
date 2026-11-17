@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import threading
 import urllib.request
 from pathlib import Path
@@ -12,32 +11,7 @@ from PIL import Image
 from lsync.core.utils import Cancelled, TaskContext, models_dir
 from lsync.i18n import _
 
-os.environ.setdefault("U2NET_HOME", str(models_dir() / "rembg"))
-
-BG_MODELS = {
-    "isnet-general-use": "Geral (recomendado)",
-    "u2net_human_seg": "Pessoas / selfies",
-    "isnet-anime": "Anime / desenho",
-    "u2netp": "Rápido (mais leve)",
-}
-
-_sessions: dict = {}
 _lock = threading.Lock()
-
-
-def remove_background(img: Image.Image, model: str = "isnet-general-use", ctx: Optional[TaskContext] = None) -> Image.Image:
-    with _lock:
-        session = _sessions.get(model)
-        if session is None:
-            if ctx is not None:
-                ctx.status(_("Carregando IA de remoção de fundo (na 1ª vez baixa o modelo, pode demorar)…"))
-            from rembg import new_session
-
-            session = new_session(model)
-            _sessions[model] = session
-    from rembg import remove
-
-    return remove(img.convert("RGB"), session=session, post_process_mask=True).convert("RGBA")
 
 
 _COLOR_FILES = {

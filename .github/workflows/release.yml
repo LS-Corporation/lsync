@@ -39,7 +39,7 @@ jobs:
           if ($v -notmatch '^\d') { $v = "0.0.0" }
           $env:LSYNC_VERSION = $v
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          choco upgrade innosetup -y --no-progress
           & $iscc packaging/installer.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
           Compress-Archive -Path dist/Lsync -DestinationPath dist/Lsync-Portatil.zip

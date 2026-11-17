@@ -191,6 +191,7 @@ def stylesheet() -> str:
     #DropTitle {{ font-size: 15px; font-weight: 600; }}
     #FileCard {{ background: {c['card']}; border: 1px solid {c['border']}; border-radius: 10px; }}
     #FileCard:hover {{ border-color: {c['border2']}; }}
+    #FileCard[selected="true"] {{ border: 2px solid {c['accent']}; }}
     #Thumb {{ background: {c['card2']}; border-radius: 7px; }}
     #AddCard {{ background: transparent; border: 1.5px dashed {c['border2']}; border-radius: 10px; color: {c['muted']}; }}
     #AddCard:hover {{ border-color: {c['accent']}; color: {c['accent']}; }}

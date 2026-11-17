@@ -22,12 +22,12 @@ def literal_calls() -> set[str]:
 
 
 def data_labels() -> set[str]:
-    from lsync.core import ai, downloader, effects, images, media
+    from lsync.core import downloader, effects, images, media
     from lsync.ui import pages
 
     out: set[str] = set()
     for d in (effects.RESIZE_MODES, effects.FIT_MODES, effects.COLOR_EFFECTS, effects.EFFECT_SUFFIX,
-              media.QUALITY_LABELS, media.RESOLUTION_LABELS, downloader.MODES, downloader.QUALITIES, ai.BG_MODELS,
+              media.QUALITY_LABELS, media.RESOLUTION_LABELS, downloader.MODES, downloader.QUALITIES,
               pages.ANIMATION_MODES, pages.OUTPUT_KINDS, pages.PREVIEW_VIEWS, pages.DL_MODES, pages.THEMES, effects.CROP_MODES, effects.CROP_RATIOS, pages.PDF_TARGETS, pages.IMAGE_EXTRA, pages.SHEET_TARGETS, pages.DOC_TARGETS, pages.CSV_SEPARATORS, pages.PDF_DPI):
         out |= set(d.values())
     out |= {label for _k, label, *_r in effects.ADJUSTMENTS}

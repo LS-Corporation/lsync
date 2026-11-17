@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication, QButtonGroup, QComboBox, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
-    QPushButton, QStackedWidget, QVBoxLayout, QWidget,
+    QPushButton, QStackedWidget, QSystemTrayIcon, QVBoxLayout, QWidget,
 )
 
 from lsync import APP_NAME
@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         self.resize(1220, 840)
         self.setMinimumSize(1020, 700)
         self.overlay: LoadingOverlay | None = None
+        self.tray: QSystemTrayIcon | None = None
         self._build()
         QTimer.singleShot(5000, self._auto_update)
 
@@ -155,6 +156,34 @@ class MainWindow(QMainWindow):
 
     def set_output_dir(self, value: str) -> None:
         self.output_dir = value
+
+    def notify_finished(self, tool: str, done: int, failed: int) -> None:
+        if not self.settings.get("notify", True):
+            return
+        if self.isActiveWindow() and not self.isMinimized():
+            return
+        QApplication.alert(self)
+        if failed:
+            text = _("{n} arquivo(s) prontos, {e} com erro.").format(n=done, e=failed)
+        else:
+            text = _("{n} arquivo(s) prontos. Clique para abrir o Lsync.").format(n=done)
+        if self.tray is None:
+            self.tray = QSystemTrayIcon(self.windowIcon(), self)
+            self.tray.setToolTip(APP_NAME)
+            self.tray.messageClicked.connect(self._restore)
+            self.tray.activated.connect(lambda reason: self._restore())
+        self.tray.show()
+        self.tray.showMessage(f"{APP_NAME} · {tool}", text, self.windowIcon(), 8000)
+        QTimer.singleShot(30000, self._hide_tray)
+
+    def _hide_tray(self) -> None:
+        if self.tray is not None:
+            self.tray.hide()
+
+    def _restore(self) -> None:
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
 
     def _set_open_after(self, on: bool) -> None:
         self.open_after = bool(on)

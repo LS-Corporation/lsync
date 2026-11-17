@@ -460,6 +460,7 @@ class ThumbLoader(QObject):
 
 class FileCard(QFrame):
     removed = Signal(object)
+    clicked = Signal(object)
     W, H = 148, 96
 
     def __init__(self, path: Path):
@@ -502,6 +503,14 @@ class FileCard(QFrame):
     def set_caption(self, text: str) -> None:
         self.caption.setText(text)
 
+    def mousePressEvent(self, event) -> None:
+        self.clicked.emit(self.path)
+
+    def set_selected(self, on: bool) -> None:
+        self.setProperty("selected", "true" if on else "false")
+        self.style().unpolish(self)
+        self.style().polish(self)
+
     def enterEvent(self, event) -> None:
         self.close_btn.show()
         self.close_btn.raise_()
@@ -524,6 +533,7 @@ class AddCard(QPushButton):
 
 class DropZone(QFrame):
     changed = Signal()
+    selected = Signal(object)
 
     def __init__(self, kinds: Iterable[str], loader: ThumbLoader, empty_height: int = 190):
         super().__init__()
@@ -554,6 +564,7 @@ class DropZone(QFrame):
         outer.addLayout(head)
 
         self.stack = QStackedLayout()
+        outer.addLayout(self.stack)
         self.empty = QFrame()
         self.empty.setObjectName("DropZone")
         self.empty.setMinimumHeight(empty_height)
@@ -572,7 +583,6 @@ class DropZone(QFrame):
         self.grid_host.setLayout(self.flow)
         self.stack.addWidget(self.empty)
         self.stack.addWidget(self.grid_host)
-        outer.addLayout(self.stack)
         loader.loaded.connect(self._thumb_ready)
         self._render()
 
@@ -625,6 +635,11 @@ class DropZone(QFrame):
             self._render()
             self.changed.emit()
 
+    def mark(self, path) -> None:
+        self._marked = path
+        for key, card in self.cards.items():
+            card.set_selected(path is not None and Path(key) == Path(path))
+
     def info(self, path: Path) -> dict:
         card = self.cards.get(str(path))
         return card.info if card else {}
@@ -661,6 +676,8 @@ class DropZone(QFrame):
         for p in self.files:
             card = FileCard(p)
             card.removed.connect(self.remove)
+            card.clicked.connect(self.selected.emit)
+            card.set_selected(p == getattr(self, "_marked", None))
             card.set_caption(self._caption(p, {}))
             self.cards[str(p)] = card
             self.flow.add(card)

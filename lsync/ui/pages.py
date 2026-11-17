@@ -53,6 +53,13 @@ def hint(text: str) -> QWidget:
     return w
 
 
+def checkbox(text: str, on: bool = False) -> QCheckBox:
+    box = QCheckBox(text)
+    box.setCursor(Qt.PointingHandCursor)
+    box.setChecked(on)
+    return box
+
+
 def add_row(form: QFormLayout, text: str, widget: QWidget) -> None:
     lbl = QLabel(text)
     lbl.setTextFormat(Qt.PlainText)
@@ -257,6 +264,7 @@ class ToolPage(QWidget):
             return
         self.runbar.bar.setValue(1000)
         extra = (" · " + " · ".join(self.notes[-3:])) if self.notes else ""
+        self.win.notify_finished(_(self.title), len(results), len(errors))
         if errors:
             self.runbar.message(_("Pronto, mas {e} com erro. {n} arquivo(s) gerados.").format(e=len(errors), n=len(results)) + extra, C["danger"])
             detail = "\n\n".join(f"• {name}:\n{err[:500]}" for name, err in errors[:6])
@@ -1073,6 +1081,11 @@ class SettingsPage(QWidget):
         opener.setChecked(win.open_after)
         opener.toggled.connect(win._set_open_after)
         add_row(gf, _("Ao terminar"), opener)
+        notify = QCheckBox(_("Avisar com uma notificação quando terminar com o Lsync minimizado"))
+        notify.setCursor(Qt.PointingHandCursor)
+        notify.setChecked(bool(win.settings.get("notify", True)))
+        notify.toggled.connect(self._notify_toggled)
+        add_row(gf, _("Notificações"), notify)
         lay.addWidget(general)
 
         folders = Card(_("Pastas"), "folder")
@@ -1139,6 +1152,10 @@ class SettingsPage(QWidget):
     @property
     def busy(self) -> bool:
         return False
+
+    def _notify_toggled(self, on: bool) -> None:
+        self.win.settings["notify"] = bool(on)
+        self.win.save_settings()
 
     def _auto_toggled(self, on: bool) -> None:
         self.win.settings["auto_update_downloader"] = bool(on)

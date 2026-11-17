@@ -13,6 +13,11 @@ QUALITIES = {0: "Melhor disponível", 1080: "1080p", 720: "720p", 480: "480p", 3
 
 
 def _deno_path() -> Optional[str]:
+    from lsync.core import updater
+
+    exe = updater.deno_exe()
+    if exe.exists():
+        return str(exe)
     try:
         import deno
 
@@ -22,6 +27,17 @@ def _deno_path() -> Optional[str]:
     except Exception:
         pass
     return shutil.which("deno")
+
+
+def _prepare_js(url: str, ctx: Optional[TaskContext]) -> None:
+    low = url.lower()
+    if ("youtube.com" in low or "youtu.be" in low) and _deno_path() is None:
+        from lsync.core import updater
+
+        try:
+            updater.ensure_deno(ctx)
+        except Exception:
+            pass
 
 
 def _format_selector(mode: str, height: int) -> str:
@@ -129,6 +145,7 @@ def _download_once(
         "fragment_retries": 5,
         "concurrent_fragment_downloads": 4,
     }
+    _prepare_js(url, ctx)
     deno = _deno_path()
     if deno:
         opts["js_runtimes"] = {"deno": {"path": deno}}
@@ -181,6 +198,7 @@ def _fetch_once(url: str) -> dict:
 
     opts: dict = {"quiet": True, "no_warnings": True, "skip_download": True, "noplaylist": True,
                   "extract_flat": "in_playlist", "socket_timeout": 15}
+    _prepare_js(url, None)
     deno = _deno_path()
     if deno:
         opts["js_runtimes"] = {"deno": {"path": deno}}

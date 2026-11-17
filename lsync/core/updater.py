@@ -192,3 +192,51 @@ def looks_outdated(message: str) -> bool:
     hints = ("please report this issue", "unable to extract", "unexpected response", "update to the latest",
              "yt-dlp -u", "nsig extraction failed", "signature extraction failed", "unable to download api page")
     return any(h in low for h in hints)
+
+
+DENO_URL = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
+_deno_lock = threading.Lock()
+
+
+def deno_exe() -> Path:
+    return _root() / "deno" / "deno.exe"
+
+
+def ensure_deno(ctx=None) -> Optional[str]:
+    exe = deno_exe()
+    if exe.exists():
+        return str(exe)
+    if sys.platform != "win32":
+        return None
+    with _deno_lock:
+        if exe.exists():
+            return str(exe)
+        req = urllib.request.Request(DENO_URL + ".sha256sum", headers={"User-Agent": "Lsync"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read()
+        text = raw.decode("utf-16") if raw[:2] in (bytes([255, 254]), bytes([254, 255])) else raw.decode("utf-8", "replace")
+        match = re.search("[0-9a-fA-F]{64}", text)
+        if not match:
+            raise RuntimeError(_("Não consegui conferir o arquivo do suporte ao YouTube."))
+        expected = match.group(0).lower()
+        req = urllib.request.Request(DENO_URL, headers={"User-Agent": "Lsync"})
+        digest = hashlib.sha256()
+        buf = io.BytesIO()
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            total = int(resp.headers.get("Content-Length") or 0)
+            while True:
+                chunk = resp.read(1 << 20)
+                if not chunk:
+                    break
+                buf.write(chunk)
+                digest.update(chunk)
+                if ctx is not None and total:
+                    ctx.status(_("Preparando o suporte ao YouTube (só na 1ª vez): {done} de {total} MB").format(done=buf.tell() >> 20, total=total >> 20))
+        if digest.hexdigest() != expected:
+            raise RuntimeError(_("O arquivo baixado veio corrompido. Tente de novo mais tarde."))
+        exe.parent.mkdir(parents=True, exist_ok=True)
+        tmp = exe.with_suffix(".part")
+        with zipfile.ZipFile(buf) as zf, open(tmp, "wb") as fh:
+            fh.write(zf.read("deno.exe"))
+        tmp.replace(exe)
+        return str(exe)

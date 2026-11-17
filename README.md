@@ -55,9 +55,13 @@ Cole o link e o Lsync mostra a miniatura, o título e a duração, para você co
 
 Marque **Comprimir o vídeo depois de baixar** para o arquivo ficar menor. A imagem continua com a mesma qualidade visível e o áudio não é alterado. A opção fica salva para os próximos downloads.
 
-Quando o YouTube, o TikTok ou outro site muda, o Lsync atualiza o baixador sozinho. Se quiser, dá para atualizar na hora em **Configurações > Baixador de vídeos**.
+No primeiro link do YouTube, o Lsync baixa sozinho um componente que o YouTube exige (cerca de 40 MB). Quando o YouTube, o TikTok ou outro site muda, o Lsync atualiza o baixador sozinho. Se quiser, dá para atualizar na hora em **Configurações > Baixador de vídeos**.
 
 Vídeos privados ou que exigem login não podem ser baixados.
+
+### Notificações
+
+Se você deixar um lote rodando e minimizar o Lsync, aparece uma notificação do Windows quando terminar. Dá para desligar em **Configurações**.
 
 ### Idioma e tema
 

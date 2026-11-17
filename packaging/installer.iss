@@ -1,6 +1,6 @@
 #define AppVersion GetEnv("LSYNC_VERSION")
 #if AppVersion == ""
-  #define AppVersion "1.0.1"
+  #define AppVersion "1.0.2"
 #endif
 
 [Setup]
@@ -14,16 +14,24 @@ AppSupportURL=https://github.com/LS-Corporation/lsync/issues
 DefaultDirName={localappdata}\Programs\Lsync
 DefaultGroupName=Lsync
 DisableProgramGroupPage=yes
-DisableDirPage=auto
+DisableDirPage=yes
+DirExistsWarning=no
+DisableWelcomePage=no
+DisableReadyPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist
 OutputBaseFilename=Lsync-Setup
 SetupIconFile=..\assets\icon.ico
 UninstallDisplayIcon={app}\Lsync.exe
 UninstallDisplayName=Lsync
-Compression=lzma2/max
+Compression=lzma2/ultra64
+LZMAUseSeparateProcess=yes
 SolidCompression=yes
-WizardStyle=modern
+WizardStyle=modern dark
+WizardImageFile=..\assets\installer\wizard-100.bmp,..\assets\installer\wizard-125.bmp,..\assets\installer\wizard-150.bmp,..\assets\installer\wizard-175.bmp,..\assets\installer\wizard-200.bmp,..\assets\installer\wizard-250.bmp
+WizardSmallImageFile=..\assets\installer\small-100.bmp,..\assets\installer\small-125.bmp,..\assets\installer\small-150.bmp,..\assets\installer\small-175.bmp,..\assets\installer\small-200.bmp,..\assets\installer\small-250.bmp
+WizardImageStretch=no
+WizardSizePercent=110
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
